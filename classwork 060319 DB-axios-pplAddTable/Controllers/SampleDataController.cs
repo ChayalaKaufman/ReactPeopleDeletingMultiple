@@ -3,42 +3,53 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using People.Data;
 
 namespace classwork_060319_DB_axios_pplAddTable.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]
     public class SampleDataController : Controller
     {
-        private static string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        private string _connectionString;
 
-        [HttpGet("[action]")]
-        public IEnumerable<WeatherForecast> WeatherForecasts()
+        public SampleDataController(IConfiguration configuration)
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                DateFormatted = DateTime.Now.AddDays(index).ToString("d"),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            });
+            _connectionString = configuration.GetConnectionString("ConStr");
         }
 
-        public class WeatherForecast
+        [Route("addPerson")]
+        [HttpPost]
+        public Person AddPerson(Person person)
         {
-            public string DateFormatted { get; set; }
-            public int TemperatureC { get; set; }
-            public string Summary { get; set; }
+            PeopleRepository repo = new PeopleRepository(_connectionString);
+            repo.Add(person);
+            return person;
+        }
 
-            public int TemperatureF
-            {
-                get
-                {
-                    return 32 + (int)(TemperatureC / 0.5556);
-                }
-            }
+        [Route("getPeople")]
+        [HttpGet]
+        public IEnumerable<Person> GetPeople()
+        {
+            var repo = new PeopleRepository(_connectionString);
+            return repo.GetPeople();
+        }
+
+        [Route("delete")]
+        [HttpPost]
+        public void Delete(Person person)
+        {
+            var repo = new PeopleRepository(_connectionString);
+            repo.Delete(person.Id);
+        }
+
+        [Route("deleteAll")]
+        [HttpPost]
+        public void DeleteAll(Array arr)
+        {
+            var repo = new PeopleRepository(_connectionString);
+            repo.DeleteAll(arr);
         }
     }
 }
